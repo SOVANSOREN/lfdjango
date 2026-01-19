@@ -1,0 +1,3 @@
+.venv
+.lostenv
+db.sqlite3

@@ -1,0 +1,13 @@
+<h3>Notifications</h3>
+
+<ul>
+    {% for note in notifications %}
+        <li>
+            <a href="{{ note.link }}">
+                {{ note.message }}
+            </a>
+        </li>
+    {% empty %}
+        <li>No new notifications</li>
+    {% endfor %}
+</ul>

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}FindMe{% endblock %}</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-light">
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container-fluid px-3">
+
+    <!-- Brand -->
+    <a class="navbar-brand fw-bold" href="/">FindMe</a>
+
+    <!-- Toggle -->
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMenu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <!-- Content -->
+    <div class="collapse navbar-collapse" id="navbarMenu">
+
+      <!-- SEARCH (fixed width) -->
+      <form method="get" action="/" class="d-flex mx-lg-3 my-2 my-lg-0">
+  <input
+    class="form-control form-control-sm me-2"
+    type="search"
+    name="q"
+    value="{{ query|default:'' }}"
+    placeholder="Search items..."
+    style="width: 200px;"
+  >
+
+  <select name="status" class="form-select form-select-sm me-2" style="width: 110px;">
+    <option value="">All</option>
+    <option value="lost" {% if status == 'lost' %}selected{% endif %}>Lost</option>
+    <option value="found" {% if status == 'found' %}selected{% endif %}>Found</option>
+  </select>
+
+  <button class="btn btn-outline-light btn-sm" type="submit">
+    search 
+   </button>
+</form>
+
+
+      <!-- RIGHT SIDE -->
+      <div class="d-flex align-items-center ms-lg-auto gap-2 my-2 my-lg-0">
+
+        {% if user.is_authenticated %}
+
+  <!-- 🔔 NOTIFICATION ICON -->
+  <div class="dropdown">
+    <a class="btn btn-outline-light btn-sm position-relative"
+       href="#"
+       id="notificationDropdown"
+       data-bs-toggle="dropdown"
+       aria-expanded="false">
+
+        🔔
+
+        {% if unread_notifications_count > 0 %}
+        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+            {{ unread_notifications_count }}
+        </span>
+        {% endif %}
+    </a>
+
+    <ul class="dropdown-menu dropdown-menu-end shadow"
+        aria-labelledby="notificationDropdown"
+        style="width: 280px;">
+
+        {% for note in notifications %}
+        <li>
+            <a class="dropdown-item small"
+               href="{{ note.link }}">
+                {{ note.message }}
+            </a>
+        </li>
+        {% empty %}
+        <li class="dropdown-item text-muted small">
+            No new notifications
+        </li>
+        {% endfor %}
+    </ul>
+  </div>
+
+  <!-- POST ITEM -->
+  <a href="{% url 'post_item' %}" class="btn btn-outline-light btn-sm">
+    + Post Item
+  </a>
+
+  <!-- LOGOUT -->
+        <form method="post" action="{% url 'logout' %}">
+          {% csrf_token %}
+         <button type="submit" class="btn btn-danger btn-sm">
+          Logout
+          </button>
+        </form>
+
+        {% else %}
+
+        <a href="{% url 'login' %}" class="btn btn-outline-light btn-sm">
+        Login
+        </a>
+        <a href="{% url 'register' %}" class="btn btn-success btn-sm">
+         Register
+        </a>
+
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+</nav>
+
+
+<!-- PAGE CONTENT -->
+<div class="container mt-4">
+    {% block content %}{% endblock %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- GLOBAL LOCATION SCRIPT -->
+<script>
+function getLocation() {
+    if (!navigator.geolocation) {
+        alert("Geolocation is not supported by your browser.");
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+        function (position) {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            window.location.href = `/?lat=${lat}&lng=${lng}`;
+        },
+        function () {
+            alert("Location access denied or unavailable.");
+        }
+    );
+}
+</script>
+<script>
+const userId = "{{ user_id|default:'' }}";  // empty string if not logged in
+
+if (userId) {
+    const notificationSocket = new WebSocket(
+        'ws://' + window.location.host + '/ws/notifications/'
+    );
+
+    notificationSocket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        alert(data.message); // temporary
+    };
+}
+</script>
+
+</body>
+</html>
